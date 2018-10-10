@@ -5,3 +5,5 @@ Not all of the Dataset is available for sharing. But some data are provided on t
 
 The format of training data and testing data is shown below.
 <img src="https://github.com/kenyonke/NLP/blob/master/project/data.png" width="900" height="500">
+
+More information included experiment results, please see the report.
