@@ -27,6 +27,6 @@ python eval_ir.py outputfile cacm_gold_std.txt
 ```
 
 ## Experiment Results
-<img src="https://github.com/kenyonke/Text_Processing/blob/master/Document%20Retrieval/results.png" width="500" height="400">
+<img src="https://github.com/kenyonke/NLP/blob/master/Document%20Retrieval/results.png" width="500" height="400">
 
 The performance scores by comparing system result files to collection gold standard document are shown above. From the table we can see that preprocess (stop list and stemming) can improve performance of retrieval. Furthermore, tfidf mode is more accurate than other two modes and tf mode is better than binary mode. However, the speed of binary mode is faster and tfidf is the slowest and most complex mode in practice. In addition, performances of all the three modes is not good, the reason could be that single mode is not enough for retrieval.
