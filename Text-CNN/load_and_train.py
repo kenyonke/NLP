@@ -105,8 +105,8 @@ if __name__ == '__main__':
     embedding_size = 200
 
     textCNN = textCNN(max_length, y_train.shape[1], word_number=len(vocab_processor.vocabulary_),
-                      embedding_size=embedding_size, kernel_number=3, kernel_size=[2,3,4], dropout_prob=0.4)
-    optimizer = tf.train.AdamOptimizer(0.01).minimize(textCNN.losses)
+                      embedding_size=embedding_size, kernel_number=10, kernel_size=[2,3,4], dropout_prob=0.4)
+    optimizer = tf.train.AdamOptimizer(0.001).minimize(textCNN.losses)
     epochs = 200
     batches = batch_iter(list(zip(x_train, y_train)), batch_size=64, num_epochs=epochs)
     
