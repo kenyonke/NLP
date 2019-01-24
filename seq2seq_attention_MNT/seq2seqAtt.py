@@ -1,5 +1,11 @@
+'''
+Sequence to Sequence with Attention Model
+'''
+
 import tensorflow as tf
 import numpy as np
+import sys 
+sys.path.append('../seq2seq_machineTranslation') 
 from get_data import data
 
 '''
@@ -7,7 +13,7 @@ seq2seq model
 '''
 
 #load data
-data = data("data/small_vocab_en","data/small_vocab_fr")
+data = data("../seq2seq_machineTranslation/data/small_vocab_en","../seq2seq_machineTranslation/data/small_vocab_fr")
 
 #encoder
 def encoder(xs, source_lens, hidden_size, num_layers, embedding_size):
@@ -66,7 +72,7 @@ def decoder_pre(en_final_states, french_embed, max_length, decoder_cell, batch_s
     return pre_outputs
 
 
-def decoder(en_final_states,french_input, sequence_length, hidden_size,
+def decoder(en_final_states, en_outputs, french_input, source_lens, target_length, hidden_size,
             layers_num, embedding_size, batch_size, max_length):
     french_embed = tf.Variable(tf.zeros([len(data.fr_word2id),embedding_size]))
     seq_embdding = tf.nn.embedding_lookup(french_embed,french_input)
@@ -82,31 +88,32 @@ def decoder(en_final_states,french_input, sequence_length, hidden_size,
     '''
     引入注意力机制
     需要在function中加入encoder的outputs“en_outputs”以及Source每句话的长度“source_lens”
+    '''
     #1 BahdanauAttention
-    attn_mech = seq.BahdanauAttention(hidden_size, en_outputs, source_lens, normalize=False,name='BahdanauAttention')
+    attn_mech = tf.contrib.seq2seq.BahdanauAttention(hidden_size, en_outputs, source_lens, normalize=False,name='BahdanauAttention')
 
-    dec_cell = seq.AttentionWrapper(cell=dec_cell,attention_mechanism=attn_mech,attention_layer_size=hidden_size)
+    decoder_cell = tf.contrib.seq2seq.AttentionWrapper(cell=decoder_cell,attention_mechanism=attn_mech,attention_layer_size=hidden_size)
 
-    decoder_initial_state = seq.AttentionWrapperState(en_final_states[0], _zero_state_tensors(hidden_size,batch_size,tf.float32))
-    
+    decoder_initial_state = decoder_cell.zero_state(batch_size=batch_size, dtype=tf.float32).clone(cell_state=en_final_states)
+    '''
     #2 LuongAttention
     attension_menchian = tf.contrib.seq2seq.LuongAttention(hidden_size, en_outputs, source_lens)
-    decoder_cell = tf.contrib.seq2seq.AttentionWrapper(dec_cell, attension_menchian, rnn_size)
+    decoder_cell = tf.contrib.seq2seq.AttentionWrapper(decoder_cell, attension_menchian, hidden_size)
     decoder_initial_state = decoder_cell.zero_state(batch_size=batch_size, dtype=tf.float32).clone(cell_state=en_final_states)
     '''
     
     
     #踩过的坑：training decoder中输入的是句子的embedding， prediction decoder中输入的是整个 embedding matrix
     with tf.variable_scope('decoder'):
-        train_outputs = decoder_train(en_final_states,
+        train_outputs = decoder_train(decoder_initial_state,
                                       seq_embdding,
-                                      sequence_length,
+                                      target_length,
                                       max_length,
                                       decoder_cell,
                                       output_layer)
     
     with tf.variable_scope('decoder', reuse=True):
-        pre_outputs = decoder_pre(en_final_states,
+        pre_outputs = decoder_pre(decoder_initial_state,
                                   french_embed,
                                   max_length,
                                   decoder_cell,
@@ -125,10 +132,12 @@ def seq2seq_eng2fr(xs,
                    batch_size,
                    max_length=25):
     
-    _,en_final_states = encoder(xs, source_lens, hidden_size, num_layers, embedding_size)
+    en_outputs, en_final_states = encoder(xs, source_lens, hidden_size, num_layers, embedding_size)
     
     train_outputs,pre_outputs = decoder(en_final_states,
+                                        en_outputs,
                                         ys,
+                                        source_lens,
                                         target_lens,
                                         hidden_size,
                                         num_layers,
@@ -159,7 +168,7 @@ if __name__ == '__main__':
     batch_size = 100
     learning_rate = 0.001
     max_target_sequence_len = 25
-    epoches = 5
+    epoches = 1
     
     #add <'GO'> before French sequences in training
     #修改了很久的错误：decoder中的输入target是加了<'GO'>的，但是训练时的target是不需要加上<'GO'>的原始句子！！！

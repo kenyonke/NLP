@@ -6,13 +6,13 @@ Created on Fri Jan 18 17:16:15 2019
 """
 
 class data:
-    def __init__(self):
+    def __init__(self, en_data_path, fr_data_path):
         #load data 
         # English source data
-        with open("data/small_vocab_en", "r", encoding="utf-8") as f:
+        with open(en_data_path, "r", encoding="utf-8") as f:
             self.source_text = f.read().split('\n')
         # French target data
-        with open("data/small_vocab_fr", "r", encoding="utf-8") as f:
+        with open(fr_data_path, "r", encoding="utf-8") as f:
             self.target_text = f.read().split('\n')
         
         self.eng_maxlen,self.fr_maxlen,self.eng_word2id,self.eng_id2word,self.fr_word2id,self.fr_id2word = self.get_data()
@@ -108,7 +108,7 @@ class data:
         
     
 if __name__ == '__main__':
-    data = data()
+    data = data("data/small_vocab_en","data/small_vocab_fr")
     #print(data.eng_maxlen,'-',data.fr_maxlen)
     #print(len(data.eng_word2id.keys()))
     #print(len(data.fr_word2id.keys()))
